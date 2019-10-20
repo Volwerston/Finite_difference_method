@@ -7,20 +7,12 @@ namespace ConsoleApp1
     class Program
     {
         private const int A = 0;
-        private const int L0 = 1;
-        private const int L1 = 0;
 
         private const int B = 1;
-        private const int B0 = 0;
-        private const int B1 = 1;
 
-        private const int N = 100;
+        private const int N = 10;
 
         private static double h = (B - A) / (double) N;
-
-        private static Func<double, double> p = x => 0;
-        private static Func<double, double> q = x => 1 / Math.Pow(x + 1, 2);
-        private static Func<double, double> f = x => 0;
 
         private const int l2 = 4;
 
@@ -40,15 +32,14 @@ namespace ConsoleApp1
         {
             double[,] matrix = new double[N+1, N+1];
 
-            matrix[0, 0] = L0 * h - L1;
-            matrix[0, 1] = L1;
-            for (int i = 2; i <= N; ++i)
+            matrix[0, 0] = 1;
+            for (int i = 1; i <= N; ++i)
             {
                 matrix[0, N] = 0;
             }
 
-            matrix[N, N - 1] = -B1;
-            matrix[N, N] = B1 + h * B0;
+            matrix[N, N - 1] = -1;
+            matrix[N, N] = 1;
             for (int i = 0; i < N - 1; ++i)
             {
                 matrix[N, i] = 0;
@@ -60,15 +51,15 @@ namespace ConsoleApp1
                 {
                     if (j == i - 1)
                     {
-                        matrix[i, j] = 1 /*- (h / 2) * p(A + i*h)*/;
+                        matrix[i, j] = -(1/Math.Pow(h, 2))*Math.Pow(A + i*h + 1, 2);
                     }
                     else if (j == i)
                     {
-                        matrix[i, j] = /*Math.Pow(h, 2) * q(A + i*h) */- 2;
+                        matrix[i, j] = (2 / Math.Pow(h, 2)) * Math.Pow(A + i * h + 1, 2);
                     }
                     else if (j == i + 1)
                     {
-                        matrix[i, j] = 1 /*+ (h / 2) * p(A + i * h)*/;
+                        matrix[i, j] = -(1 / Math.Pow(h, 2)) * Math.Pow(A + i * h + 1, 2);
                     }
                     else
                     {
@@ -80,21 +71,22 @@ namespace ConsoleApp1
             return matrix;
         }
 
-        static void Main(string[] args)
+        static void Main()
         {
-            int iterations = 3;
+            int iterations = 100;
 
-            Func<double, double> f0 = x => Math.Pow(x+1, 2);
+            // Setting initial approximation
+            Func<double, double> f0 = x => x - Math.Pow(x, 2)/2.0;
             double[] f0Val = new double[N + 1];
 
-            for (int i = 0; i <= N; ++i)
+            for (int i = 0; i < N; ++i)
             {
                 f0Val[i] = f0(A + i * h);
             }
+            f0Val[N] = h;
 
             double a0 = CalculateDefiniteIntegral(f0Val, f0Val);
-            var matrix = BuildMatrix();
-            var inversedMatrix = matrix.Inverse();
+            var matrix = BuildMatrix();var inversedMatrix = matrix.Inverse();
 
             double[] f1Val = new double[N + 1];
             double a_k_minus_1 = a0;
@@ -108,6 +100,7 @@ namespace ConsoleApp1
             for (int k = 1; k <= iterations; ++k)
             {
                 f1Val = inversedMatrix.Dot(f0Val);
+                f1Val[N] = h;
 
                 a_k = CalculateDefiniteIntegral(f0Val, f1Val);
                 a_k_plus_1 = CalculateDefiniteIntegral(f1Val, f1Val);
@@ -139,7 +132,7 @@ namespace ConsoleApp1
                 Console.WriteLine(elem);
             }
 
-            Console.WriteLine("Hello World!");
+            Console.ReadLine();
         }
     }
 }
