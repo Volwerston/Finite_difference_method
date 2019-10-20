@@ -73,40 +73,47 @@ namespace ConsoleApp1
 
         static void Main()
         {
-            int iterations = 100;
+            Console.WriteLine("Enter number of iterations: ");
+            int iterations = Convert.ToInt32(Console.ReadLine());
 
             // Setting initial approximation
             Func<double, double> f0 = x => x - Math.Pow(x, 2)/2.0;
             double[] f0Val = new double[N + 1];
-
-            for (int i = 0; i < N; ++i)
+            for (int i = 1; i < N; ++i)
             {
                 f0Val[i] = f0(A + i * h);
             }
+
+            f0Val[0] = 0;
             f0Val[N] = h;
 
             double a0 = CalculateDefiniteIntegral(f0Val, f0Val);
-            var matrix = BuildMatrix();var inversedMatrix = matrix.Inverse();
+            var matrix = BuildMatrix();
+            var inversedMatrix = matrix.Inverse();
 
-            double[] f1Val = new double[N + 1];
+            double[] f1Val;
+            double[] f2Val;
+
             double a_k_minus_1 = a0;
-
             double a_k;
             double a_k_plus_1;
 
             LinkedList<double> lowerBounds = new LinkedList<double>();
             LinkedList<double> upperBounds = new LinkedList<double>();
+            LinkedList<double> mus = new LinkedList<double>();
 
             for (int k = 1; k <= iterations; ++k)
             {
                 f1Val = inversedMatrix.Dot(f0Val);
-                f1Val[N] = h;
+
+                f2Val = inversedMatrix.Dot(f1Val);
 
                 a_k = CalculateDefiniteIntegral(f0Val, f1Val);
-                a_k_plus_1 = CalculateDefiniteIntegral(f1Val, f1Val);
+                a_k_plus_1 = CalculateDefiniteIntegral(f1Val, f2Val);
 
                 double mu_k = a_k_minus_1 / a_k;
                 double mu_k_plus_1 = a_k / a_k_plus_1;
+                mus.AddLast(mu_k_plus_1);
 
                 upperBounds.AddFirst(mu_k_plus_1);
 
@@ -120,17 +127,26 @@ namespace ConsoleApp1
                 a_k_minus_1 = a_k;
             }
 
+            // Print results: 
+
+            Console.WriteLine("Lower bounds");
             foreach (var elem in lowerBounds)
             {
                 Console.WriteLine(elem);
             }
 
-            Console.WriteLine("=======");
-
+            Console.WriteLine();
+            Console.WriteLine("Upper bounds");
             foreach (var elem in upperBounds)
             {
                 Console.WriteLine(elem);
             }
+
+            // Mu-s
+            //foreach (var elem in mus)
+            //{
+            //    Console.WriteLine(elem);
+            //}
 
             Console.ReadLine();
         }
